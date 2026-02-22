@@ -104,11 +104,47 @@ export default async function PostPage({ params }: PostPageProps) {
                 </div>
             )}
 
-            <div className="prose prose-lg prose-zinc dark:prose-invert max-w-none 
-                prose-headings:font-bold prose-headings:tracking-tight
-                prose-a:text-blue-600 dark:prose-a:text-blue-400
-                prose-img:rounded-3xl prose-img:shadow-lg">
-                <ReactMarkdown>{post.content}</ReactMarkdown>
+            <div
+                className="
+                    prose prose-lg
+                    prose-zinc dark:prose-invert
+                    max-w-none
+
+                    prose-headings:font-extrabold
+                    prose-headings:tracking-tight
+                    prose-h2:mt-16 prose-h2:mb-6
+                    prose-h3:mt-12 prose-h3:mb-4
+
+                    prose-p:leading-relaxed
+                    prose-p:text-zinc-700 dark:prose-p:text-zinc-300
+
+                    prose-strong:text-zinc-900 dark:prose-strong:text-white
+
+                    prose-a:text-blue-600 dark:prose-a:text-blue-400
+                    prose-a:no-underline hover:prose-a:underline
+
+                    prose-hr:my-16
+                "
+                >
+                <ReactMarkdown
+                    components={{
+                        img: ({ node, ...props }) => (
+                        <img
+                            {...props}
+                            className="
+                            w-full
+                            my-12
+                            rounded-2xl
+                            shadow-lg
+                            ring-1 ring-zinc-200 dark:ring-zinc-800
+                            "
+                            loading="lazy"
+                        />
+                        ),
+                    }}
+                    >
+                    {post.content}
+                </ReactMarkdown>
             </div>
         </article>
     )
