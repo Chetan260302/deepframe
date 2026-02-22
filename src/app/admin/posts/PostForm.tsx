@@ -14,10 +14,14 @@ export default function PostForm({ initialData, categories }: PostFormProps) {
     const [selectedCategories, setSelectedCategories] = useState<string[]>(
         initialData?.post_categories?.map((pc: any) => pc.category_id) || []
     )
+    const [tags, setTags] = useState(
+        initialData?.post_tags?.map((pt: any) => pt.tags.name).join(', ') || ''
+    )
 
     async function handleSubmit(formData: FormData) {
         setIsSubmitting(true)
         formData.append('is_published', String(isPublished))
+        formData.append('tags', tags)
         selectedCategories.forEach(id => formData.append('category_ids', id))
 
         if (initialData) {
@@ -98,13 +102,25 @@ export default function PostForm({ initialData, categories }: PostFormProps) {
                         ))}
                     </div>
                 </div>
-                <div className="space-y-2">
-                    <label className="text-sm font-medium">Cover Image URL</label>
-                    <input
-                        name="cover_image"
-                        defaultValue={initialData?.cover_image}
-                        className="w-full p-2 border rounded dark:bg-zinc-800 dark:border-zinc-700"
-                    />
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">Tags (Comma Separated)</label>
+                        <input
+                            name="tags_input"
+                            value={tags}
+                            onChange={(e) => setTags(e.target.value)}
+                            placeholder="Next.js, Supabase, Tailwind"
+                            className="w-full p-2 border rounded dark:bg-zinc-800 dark:border-zinc-700"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">Cover Image URL</label>
+                        <input
+                            name="cover_image"
+                            defaultValue={initialData?.cover_image}
+                            className="w-full p-2 border rounded dark:bg-zinc-800 dark:border-zinc-700"
+                        />
+                    </div>
                 </div>
             </div>
 

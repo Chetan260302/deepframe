@@ -17,6 +17,7 @@ export async function createPost(formData: FormData) {
     const excerpt = formData.get('excerpt') as string
     const cover_image = formData.get('cover_image') as string
     const category_ids = formData.getAll('category_ids') as string[]
+    const tagsString = formData.get('tags') as string
     const is_published = formData.get('is_published') === 'true'
 
     const { data: post, error: postError } = await supabase.from('posts').insert({
@@ -35,6 +36,7 @@ export async function createPost(formData: FormData) {
         return { error: postError.message }
     }
 
+    // Handle Categories
     if (category_ids.length > 0) {
         const postCategories = category_ids.map(catId => ({
             post_id: post.id,
@@ -42,6 +44,36 @@ export async function createPost(formData: FormData) {
         }))
         const { error: catError } = await supabase.from('post_categories').insert(postCategories)
         if (catError) console.error(catError)
+    }
+
+    // Handle Tags
+    if (tagsString) {
+        const tags = tagsString
+            .split(',')
+            .map(tag => tag.trim())
+            .filter(tag => tag.length > 0)
+
+        for (const tagName of tags) {
+            const tagSlug = tagName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+
+            // Upsert tag
+            const { data: tag, error: tagError } = await supabase
+                .from('tags')
+                .upsert({ name: tagName, slug: tagSlug }, { onConflict: 'name' })
+                .select()
+                .single()
+
+            if (tagError) {
+                console.error('Error upserting tag:', tagError)
+                continue
+            }
+
+            // Associate tag with post
+            await supabase.from('post_tags').insert({
+                post_id: post.id,
+                tag_id: tag.id
+            })
+        }
     }
 
     if (is_published) {
@@ -65,6 +97,7 @@ export async function updatePost(id: string, formData: FormData) {
     const excerpt = formData.get('excerpt') as string
     const cover_image = formData.get('cover_image') as string
     const category_ids = formData.getAll('category_ids') as string[]
+    const tagsString = formData.get('tags') as string
     const is_published = formData.get('is_published') === 'true'
 
     const updateData: any = {
@@ -103,6 +136,37 @@ export async function updatePost(id: string, formData: FormData) {
         }))
         const { error: catError } = await supabase.from('post_categories').insert(postCategories)
         if (catError) console.error(catError)
+    }
+
+    // Update Tags (delete old then re-insert/upsert)
+    await supabase.from('post_tags').delete().eq('post_id', id)
+    if (tagsString) {
+        const tags = tagsString
+            .split(',')
+            .map(tag => tag.trim())
+            .filter(tag => tag.length > 0)
+
+        for (const tagName of tags) {
+            const tagSlug = tagName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+
+            // Upsert tag
+            const { data: tag, error: tagError } = await supabase
+                .from('tags')
+                .upsert({ name: tagName, slug: tagSlug }, { onConflict: 'name' })
+                .select()
+                .single()
+
+            if (tagError) {
+                console.error('Error upserting tag:', tagError)
+                continue
+            }
+
+            // Associate tag with post
+            await supabase.from('post_tags').insert({
+                post_id: id,
+                tag_id: tag.id
+            })
+        }
     }
 
     if (is_published && updateData.published_at) {

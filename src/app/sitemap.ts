@@ -8,21 +8,27 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     try {
         const supabase = createClient()
-        const { data: posts, error } = await supabase
+        const { data: posts } = await supabase
             .from('posts')
             .select('slug, updated_at')
             .eq('is_published', true)
 
-        if (error) {
-            console.error('Sitemap DB error:', error)
-            throw error
-        }
+        const { data: tags } = await supabase
+            .from('tags')
+            .select('slug, created_at')
 
-        const postUrls = (posts || []).map((post) => ({
+        const postUrls = (posts || []).map((post: any) => ({
             url: `${baseUrl}/blog/${post.slug}`,
             lastModified: new Date(post.updated_at),
             changeFrequency: 'weekly' as const,
             priority: 0.7,
+        }))
+
+        const tagUrls = (tags || []).map((tag: any) => ({
+            url: `${baseUrl}/tag/${tag.slug}`,
+            lastModified: new Date(tag.created_at),
+            changeFrequency: 'weekly' as const,
+            priority: 0.5,
         }))
 
         return [
@@ -45,6 +51,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
                 priority: 0.8,
             },
             ...postUrls,
+            ...tagUrls,
         ]
     } catch (e) {
         console.error('Sitemap generation failed:', e)

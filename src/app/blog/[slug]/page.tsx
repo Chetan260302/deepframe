@@ -38,6 +38,12 @@ export default async function PostPage({ params }: PostPageProps) {
           name,
           slug
         )
+      ),
+      post_tags (
+        tags (
+          name,
+          slug
+        )
       )
     `)
         .eq('slug', params.slug)
@@ -59,6 +65,14 @@ export default async function PostPage({ params }: PostPageProps) {
                             className="inline-block rounded-full bg-blue-100 px-3 py-1 text-xs font-bold text-blue-800 dark:bg-blue-900/50 dark:text-blue-200 capitalize"
                         >
                             {pc.categories.name}
+                        </span>
+                    ))}
+                    {post.post_tags?.map((pt: any) => (
+                        <span
+                            key={pt.tags.slug}
+                            className="inline-block rounded-full bg-zinc-100 px-3 py-1 text-xs font-bold text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400 capitalize"
+                        >
+                            #{pt.tags.name}
                         </span>
                     ))}
                 </div>
